@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="Внешний вид">
+        <ListPreference
+            app:defaultValue="0"
+            app:entries="@array/theme_entries"
+            app:entryValues="@array/theme_values"
+            app:key="theme"
+            app:title="Тема"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Блокировка">
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:key="block_enabled"
+            app:title="Блокировка включена" />
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:key="block_only_in_session"
+            app:summary="Отключите, чтобы блокировать всегда при низкой концентрации"
+            app:title="Только во время сессии" />
+        <SeekBarPreference
+            android:max="100"
+            app:defaultValue="55"
+            app:key="block_threshold"
+            app:min="0"
+            app:showSeekBarValue="true"
+            app:title="Порог концентрации (%)" />
+        <SeekBarPreference
+            android:max="60"
+            app:defaultValue="5"
+            app:key="grace_minutes"
+            app:min="1"
+            app:showSeekBarValue="true"
+            app:title="«Помеха» (минуты)" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Мониторинг">
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:key="camera_monitoring"
+            app:summary="Анализ моргания и выражения лица для оценки концентрации"
+            app:title="Мониторинг через камеру" />
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:key="notifications_enabled"
+            app:title="Уведомления о задачах" />
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:key="wear_enabled"
+            app:summary="Пульс и активность с часов"
+            app:title="Wear OS" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Данные">
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="sync_enabled"
+            app:title="Синхронизация по REST" />
+        <EditTextPreference
+            app:defaultValue=""
+            app:key="api_base_url"
+            app:summary="Базовый URL вашего REST API"
+            app:title="API URL"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Расписание">
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="schedule_enabled"
+            app:summary="Блокировка действует только в выбранное время"
+            app:title="Работать по расписанию" />
+        <Preference
+            app:key="schedule_start"
+            app:title="Начало" />
+        <Preference
+            app:key="schedule_end"
+            app:title="Конец" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Настройка разрешений">
+        <Preference
+            app:key="open_blocklist"
+            app:title="Список блокировки" />
+        <Preference
+            app:key="open_accessibility"
+            app:summary="Требуется для определения текущего приложения"
+            app:title="Сервис доступности" />
+        <Preference
+            app:key="open_overlay"
+            app:summary="Требуется для показа экрана блокировки"
+            app:title="Оверлей поверх окон" />
+    </PreferenceCategory>
+</PreferenceScreen>

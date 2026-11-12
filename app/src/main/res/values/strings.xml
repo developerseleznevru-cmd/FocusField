@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">FocusField</string>
+
+    <!-- Навигация -->
+    <string name="nav_home">Фокус</string>
+    <string name="nav_tasks">Задачи</string>
+    <string name="nav_stats">Статистика</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="auth_label">Вход</string>
+    <string name="action_settings">Настройки</string>
+
+    <!-- Аутентификация -->
+    <string name="auth_login_title">Вход в FocusField</string>
+    <string name="auth_register_title">Регистрация</string>
+    <string name="auth_login">Войти</string>
+    <string name="auth_register">Зарегистрироваться</string>
+    <string name="auth_switch_to_login">Уже есть аккаунт? Войти</string>
+    <string name="auth_switch_to_register">Нет аккаунта? Создать</string>
+    <string name="auth_forgot_password">Забыли пароль?</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Пароль</string>
+    <string name="auth_google">Войти через Google</string>
+    <string name="auth_facebook">Войти через Facebook</string>
+    <string name="auth_offline_notice">Firebase не настроен — работает локальный режим (см. README в проекте).</string>
+
+    <!-- Сессия концентрации -->
+    <string name="session_start">Начать сессию</string>
+    <string name="session_stop">Завершить сессию</string>
+    <string name="session_active">Сессия концентрации идёт</string>
+    <string name="elapsed_format">%1$02d:%2$02d</string>
+    <string name="score_percent">%d%%</string>
+    <string name="score_no_data">нет данных</string>
+    <string name="band_high">Высокая концентрация</string>
+    <string name="band_medium">Средняя концентрация</string>
+    <string name="band_low">Низкая концентрация</string>
+    <string name="band_no_data">Нет данных</string>
+    <string name="task_none">Без задачи</string>
+    <string name="task_hint">Задача (необязательно)</string>
+    <string name="camera_error">Камера недоступна</string>
+    <string name="camera_hint">Мониторинг камеры отключён или разрешение не выдано. Сессия работает без биометрии — блокировка применяется ко всему списку.</string>
+    <string name="wear_chip_text">Пульс: %1$d уд/мин · Шаги: %2$d</string>
+    <string name="btn_accessibility">Сервис доступности</string>
+    <string name="btn_overlay">Оверлей</string>
+    <string name="btn_blocklist">Список блокировки</string>
+
+    <!-- Напоминания -->
+    <string name="channel_reminders">Напоминания о задачах</string>
+    <string name="channel_reminders_desc">Уведомления о запланированных задачах</string>
+    <string name="channel_focus">Сессия концентрации</string>
+    <string name="channel_focus_desc">Уведомления о сессии концентрации</string>
+    <string name="reminder_notification_title">Напоминание</string>
+
+    <!-- Задачи -->
+    <string name="task_add_title">Новая задача</string>
+    <string name="task_save">Сохранить</string>
+    <string name="task_hint_title">Название</string>
+    <string name="task_hint_description">Описание</string>
+    <string name="task_pick_due_date">Срок выполнения</string>
+    <string name="task_pick_reminder">Время напоминания</string>
+    <string name="tasks_empty">Задач пока нет. Нажмите «Добавить задачу».</string>
+    <string name="tasks_add">Добавить задачу</string>
+    <string name="tasks_sync">Синхрон. через API</string>
+    <string name="task_delete">Удалить</string>
+
+    <!-- Статистика -->
+    <string name="stats_range_day">День</string>
+    <string name="stats_range_week">Неделя</string>
+    <string name="stats_range_month">Месяц</string>
+    <string name="stats_chart_title">Концентрация по дням</string>
+    <string name="stats_sessions_count">Сессий: %1$d</string>
+    <string name="stats_total_minutes">Всего в фокусе: %1$d мин</string>
+    <string name="stats_interruptions">Помех: %1$d</string>
+    <string name="stats_empty">Нет данных за период. Запустите сессию концентрации.</string>
+
+    <!-- Список блокировки -->
+    <string name="blocked_title">Список блокировки</string>
+    <string name="blocked_hint_site">Сайт, например vk.com</string>
+    <string name="blocked_add_site">Добавить сайт</string>
+    <string name="blocked_pick_apps">Выбрать приложения</string>
+    <string name="blocked_pick_apps_title">Установленные приложения</string>
+    <string name="blocked_empty">Список пуст. Добавьте приложения или сайты.</string>
+
+    <!-- Оверлей блокировки -->
+    <string name="block_title">Доступ заблокирован</string>
+    <string name="block_message">Этот ресурс отвлекает вас от сессии концентрации. Вернитесь к работе или воспользуйтесь «помехой» — временным разрешением.</string>
+    <string name="block_back_to_work">Вернуться к работе</string>
+    <string name="block_allow_for">Разрешить на %1$d мин</string>
+    <string name="block_unknown_app">%1$s</string>
+    <string name="block_site_target">Сайт: %1$s</string>
+
+    <!-- Сервис доступности -->
+    <string name="accessibility_service_label">FocusField — блокировка</string>
+    <string name="accessibility_service_description">Отслеживает текущее приложение и адресную строку браузера и ограничивает доступ к отвлекающим приложениям и сайтам при низкой концентрации.</string>
+</resources>

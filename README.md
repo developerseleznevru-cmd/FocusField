@@ -1,0 +1,126 @@
+# FocusField — AI-менеджер внимания
+
+Android-приложение (Kotlin, MVVM), помогающее концентрироваться: отслеживает уровень внимания по биометрии (камера + ML Kit, Wear OS) и ограничивает доступ к отвлекающим приложениям и сайтам, когда концентрация падает. Функция «помехи» позволяет временно разрешить доступ.
+
+## Соответствие техническому заданию
+
+| Пункт ТЗ | Реализация |
+|---|---|
+| Аутентификация (Email, Google, Facebook, восстановление пароля) | `data/repo/AuthRepository`: Firebase Authentication; при отсутствии `google-services.json` — прозрачный локальный режим (пароли хешируются PBKDF-подобной схемой, данные в зашифрованных SharedPreferences). Google/Facebook — точки входа с понятной ошибкой, пока не настроена Firebase-консоль |
+| Сбор биометрии (камера: моргание, лицо, глаза; Wear OS: пульс) | `biometrics/FaceAnalyzer` (CameraX + ML Kit Face Detection), `biometrics/BlinkDetector`; `service/wear/WearListenerService` принимает пульс/шаги с часов по пути `/focusfield/health` |
+| Анализ уровня концентрации (ML, SQLite + облако) | `biometrics/ConcentrationCalculator` — скоринг по открытости глаз, позе головы, улыбке; окно ~10 с; сессии и сэмплы хранятся в Room (SQLite), синхронизация в облако — REST/Firebase (см. Roadmap) |
+| Блокировка приложений и сайтов | `service/block/BlockingAccessibilityService` (определяет текущее приложение, читает адресную строку Chrome/Firefox/Яндекс.Браузера) + оверлей `BlockOverlayActivity` |
+| Функция «помехи» | Кнопка «Разрешить на N мин» в оверлее (`BlockingStateStore.grantOverride`), N настраивается; показы оверлея считаются прерываниями |
+| Задачи и напоминания, интеграция с календарём | `ui/tasks` (Room + RecyclerView), напоминания через AlarmManager + уведомления; дата задачи ставится через MaterialDatePicker |
+| Статистика: день/неделя/месяц, гистограммы и круговые диаграммы | `ui/stats` + `data/model/StatsAggregator` (чистая логика, покрыта тестами); MPAndroidChart |
+| Material Design, настройки внешнего вида | Material 3, DayNight, выбор темы в настройках |
+| Настройки (пороги, расписание, синхронизация) | `ui/settings` (PreferenceFragmentCompat): порог концентрации, длительность «помехи», расписание по времени суток, REST-URL |
+| MVVM, ViewModel/LiveData/Room | Везде; вручную собранный DI-контейнер без внешних фреймворков |
+| CameraX/ML Kit, Room, Firebase Auth, MPAndroidChart | Да (см. таблицу версий в `gradle/libs.versions.toml`) |
+| REST API | Retrofit (`data/remote/SyncApi`): отправка сессий, загрузка задач из внешнего API |
+| Шифрование данных, защита доступа | Зашифрованные SharedPreferences (Android Keystore, AES-256), хеширование паролей, `allowBackup=false` |
+| Юнит-тесты + Espresso | 33 юнит-теста (концентрация, моргание, домены, хеши, статистика, репозиторий задач, расписание) + инструментальный smoke-тест MainActivity |
+
+## Архитектура и поток данных
+
+```
+CameraX (ImageAnalysis) ──► FaceAnalyzer (ML Kit) ──► FocusViewModel
+                                                        │  score 0..100
+                                                        ▼
+                                              BlockingStateStore  (StateFlow + зашифрованные prefs)
+                                                        │
+     BlockingAccessibilityService ◄──────────────────────┘
+        │  «пользователь открыл заблокированное приложение/сайт,
+        │   концентрация ниже порога, „помехи“ нет»
+        ▼
+     BlockOverlayActivity (оверлей) ── «Помеха»: разрешить на N минут
+```
+
+Структура пакетов:
+
+```
+ru.seleznev.focusfield
+├─ FocusFieldApp.kt          — Application + DI-контейнер (AppContainer)
+├─ MainActivity.kt           — навигация, гейт по аутентификации, тема
+├─ biometrics/               — FaceAnalyzer, BlinkDetector, ConcentrationCalculator, FaceFrame
+├─ data/
+│  ├─ db/                    — Room: entities, dao, FocusFieldDatabase (схема экспортируется в app/schemas)
+│  ├─ model/                 — доменные модели + StatsAggregator
+│  ├─ repo/                  — Auth, Tasks, Focus, Block, Settings, RemoteSync
+│  ├─ remote/                — Retrofit SyncApi + DTO
+│  ├─ prefs/                 — SecurePrefs (EncryptedSharedPreferences)
+│  ├─ crypto/                — PasswordHasher
+│  └─ state/                 — BlockingStateStore (общее состояние блокировки)
+├─ service/
+│  ├─ block/                 — BlockingAccessibilityService, BlockOverlayActivity, ScheduleWindow
+│  ├─ reminder/              — ReminderScheduler, ReminderReceiver, BootReceiver, NotificationHelper
+│  ├─ sync/                  — SyncWorker (WorkManager)
+│  └─ wear/                  — WearListenerService, WearHealthStore
+└─ ui/                       — auth, focus, tasks, stats, settings, blocked (+ adapters, viewmodels)
+```
+
+## Быстрый старт
+
+Требования: JDK 17+ (например, JBR из Android Studio), Android SDK 37.
+
+```bat
+:: Windows (JAVA_HOME указать на JDK 17+)
+set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
+gradlew.bat :app:assembleDebug        # сборка APK
+gradlew.bat :app:testDebugUnitTest    # юнит-тесты
+gradlew.bat :app:connectedDebugAndroidTest  # Espresso (нужно устройство/эмулятор)
+```
+
+APK: `app/build/outputs/apk/debug/app-debug.apk`.
+
+## Настройка Firebase (опционально)
+
+Без Firebase всё работает локально. Для облачной аутентификации:
+
+1. В [Firebase Console](https://console.firebase.google.com) создайте проект с пакетом `ru.seleznev.focusfield`.
+2. Скачайте `google-services.json` → положите в `app/`.
+3. В **корневой** `build.gradle.kts` и `app/build.gradle.kts` подключите плагин `com.google.gms.google-services` (версия 4.4.x).
+4. В консоли включите провайдеров: **Email/Password**, при желании **Google** и **Facebook** (для Facebook нужен App ID из Meta for Developers).
+
+Пока `google-services.json` отсутствует, экран входа показывает пометку о локальном режиме; кнопки социального входа возвращают сообщение «требуется настройка Firebase».
+
+## Разрешения и зачем они
+
+| Разрешение | Назначение |
+|---|---|
+| `CAMERA` | Анализ моргания/лица для оценки концентрации (только во время сессии, кадры не сохраняются) |
+| AccessibilityService | Определение текущего приложения/адреса для блокировки (включается пользователем в системных настройках) |
+| `SYSTEM_ALERT_WINDOW` | Оверлей «Доступ заблокирован» поверх других приложений |
+| `QUERY_ALL_PACKAGES` | Список установленных приложений для выбора в списке блокировки. **Внимание:** для публикации в Google Play требуется обоснование |
+| `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED` | Напоминания по задачам |
+| `INTERNET` | Firebase / REST-синхронизация |
+
+## Ручная проверка (тест-план)
+
+1. Запуск → экран входа → «Нет аккаунта? Создать» → регистрация (локальный режим).
+2. Вкладка «Фокус» → разрешить камеру → «Начать сессию» → индикатор концентрации оживает; уберите лицо — score падает.
+3. Настройки → «Сервис доступности» → включить FocusField; «Оверлей» → разрешить.
+4. «Список блокировки» → добавить YouTube/VK и сайт `vk.com`.
+5. Откройте заблокированное приложение при активной сессии → оверлей; «Разрешить на 5 мин» — доступ открывается, счётчик «Помех» растёт.
+6. «Статистика» → гистограмма/диаграмма по сессиям.
+
+## Тесты
+
+- **Юнит-тесты** (`app/src/test`): ConcentrationCalculator, BlinkDetector, DomainMatcher, PasswordHasher, StatsAggregator, ScheduleWindow, TaskRepository (fake DAO), 33 кейса — все зелёные.
+- **Инструментальные** (`app/src/androidTest`): smoke-тест MainActivity на Espresso.
+
+## Отклонения от ТЗ (осознанные)
+
+- **minSdk 24 вместо API 21.** Весь актуальный стек AndroidX (navigation 2.10, activity 1.13, fragment 1.9) требует API 24; для API 21 пришлось бы даунгрейдить библиотеки на версии 2022–2023 гг.
+- **MPAndroidChart v3.2.0** — тег v3.1.2 недоступен на JitPack.
+- **Jetpack Security (EncryptedSharedPreferences) deprecated upstream** — API остаётся рабочим; миграция на DataStore + Keystore в roadmap.
+- **Google/Facebook вход** — каркас готов, нужен Firebase-проект (инструкция выше).
+- **Wear OS** — реализована приёмная сторона (приложение-компаньон для часов — отдельный проект).
+
+## Roadmap
+
+- Foreground-сервис камера-мониторинга для работы фоном + ML-модель внимания (индивидуальная калибровка).
+- Шифрование БД (SQLCipher) вместо открытого Room.
+- Синхронизация сессий в Firestore; облачный бэкап.
+- Блокировка по геолокации («дома/на работе»).
+- Экран-компаньон Wear OS и учёт пульса в скоринге концентрации.

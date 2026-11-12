@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Диапазоны концентрации -->
+    <color name="focus_high">#FF43A047</color>
+    <color name="focus_medium">#FFFFB300</color>
+    <color name="focus_low">#FFE53935</color>
+    <color name="focus_unknown">#FF9E9E9E</color>
+
+    <!-- Графики -->
+    <color name="chart_primary">#FF6750A4</color>
+
+    <!-- Оверлей блокировки -->
+    <color name="block_overlay_background">#F2000000</color>
+</resources>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/authFragment">
+
+    <fragment
+        android:id="@+id/authFragment"
+        android:name="ru.seleznev.focusfield.ui.auth.AuthFragment"
+        android:label="@string/auth_label"
+        tools:layout="@layout/fragment_auth">
+        <action
+            android:id="@+id/action_auth_to_main"
+            app:destination="@id/mainGraph"
+            app:popUpTo="@id/authFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <navigation
+        android:id="@+id/mainGraph"
+        app:startDestination="@id/focusHomeFragment">
+
+        <fragment
+            android:id="@+id/focusHomeFragment"
+            android:name="ru.seleznev.focusfield.ui.focus.FocusHomeFragment"
+            android:label="@string/nav_home"
+            tools:layout="@layout/fragment_focus_home">
+            <action
+                android:id="@+id/action_focusHome_to_blockedItems"
+                app:destination="@id/blockedItemsFragment" />
+        </fragment>
+
+        <fragment
+            android:id="@+id/tasksFragment"
+            android:name="ru.seleznev.focusfield.ui.tasks.TasksFragment"
+            android:label="@string/nav_tasks"
+            tools:layout="@layout/fragment_tasks" />
+
+        <fragment
+            android:id="@+id/statsFragment"
+            android:name="ru.seleznev.focusfield.ui.stats.StatsFragment"
+            android:label="@string/nav_stats"
+            tools:layout="@layout/fragment_stats" />
+
+        <fragment
+            android:id="@+id/settingsFragment"
+            android:name="ru.seleznev.focusfield.ui.settings.SettingsFragment"
+            android:label="@string/nav_settings"
+            tools:layout="@layout/fragment_settings">
+            <action
+                android:id="@+id/action_settings_to_blockedItems"
+                app:destination="@id/blockedItemsFragment" />
+        </fragment>
+
+        <fragment
+            android:id="@+id/blockedItemsFragment"
+            android:name="ru.seleznev.focusfield.ui.blocked.BlockedItemsFragment"
+            android:label="@string/blocked_title"
+            tools:layout="@layout/fragment_blocked_items" />
+    </navigation>
+</navigation>
