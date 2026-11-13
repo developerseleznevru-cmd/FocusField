@@ -20,6 +20,10 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SeekBarPreference
 import androidx.preference.SwitchPreferenceCompat
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import ru.seleznev.focusfield.R
 import ru.seleznev.focusfield.service.sync.SyncWorker
@@ -52,6 +56,25 @@ class SettingsFragment : Fragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences, rootKey)
             bind()
+        }
+
+        /**
+         * Подписка на состояние — во onViewCreated: viewLifecycleOwner
+         * доступен только после создания view фрагмента (в onCreatePreferences
+         * он ещё не существует и обращение к нему приводит к крашу).
+         */
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.state.collect { state ->
+                        findPreference<Preference>(PREF_SCHEDULE_START)?.summary =
+                            formatTime(state.scheduleStartMinutes)
+                        findPreference<Preference>(PREF_SCHEDULE_END)?.summary =
+                            formatTime(state.scheduleEndMinutes)
+                    }
+                }
+            }
         }
 
         private fun bind() {
@@ -121,16 +144,30 @@ class SettingsFragment : Fragment() {
                 true
             }
 
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.state.collect { state ->
-                        findPreference<Preference>(PREF_SCHEDULE_START)?.summary =
-                            formatTime(state.scheduleStartMinutes)
-                        findPreference<Preference>(PREF_SCHEDULE_END)?.summary =
-                            formatTime(state.scheduleEndMinutes)
-                    }
+            findPreference<Preference>(PREF_LOGOUT)?.let { pref ->
+                // Разрушительное действие — выделяем цветом ошибки Material 3.
+                pref.title = SpannableString(pref.title?.toString().orEmpty()).apply {
+                    setSpan(
+                        ForegroundColorSpan(LOGOUT_COLOR),
+                        0,
+                        length,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+                pref.setOnPreferenceClickListener {
+                    confirmLogout()
+                    true
                 }
             }
+        }
+
+        private fun confirmLogout() {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Выйти из аккаунта?")
+                .setMessage("Вы вернётесь на экран входа.")
+                .setPositiveButton("Выйти") { _, _ -> viewModel.signOut() }
+                .setNegativeButton("Отмена", null)
+                .show()
         }
 
         private fun pickTime(target: String) {
@@ -176,6 +213,10 @@ class SettingsFragment : Fragment() {
             const val PREF_OPEN_BLOCKLIST = "open_blocklist"
             const val PREF_OPEN_ACCESSIBILITY = "open_accessibility"
             const val PREF_OPEN_OVERLAY = "open_overlay"
+            const val PREF_LOGOUT = "logout"
+
+            /** Цвет ошибки Material 3 (…/colorError) для акцента выхода. */
+            const val LOGOUT_COLOR = 0xFFB3261E.toInt()
         }
     }
 }

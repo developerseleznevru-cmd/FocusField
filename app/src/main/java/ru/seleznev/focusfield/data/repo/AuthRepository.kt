@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,16 +52,27 @@ class AuthRepository(context: Context) {
 
     val isFirebaseAvailable: Boolean get() = firebaseAuth != null
 
-    /** Регистрация по email. */
-    suspend fun register(email: String, password: String): Result<Unit> {
+    /**
+     * Регистрация по email. [fullName] — ФИО профиля («Фамилия Имя Отчество»);
+     * сохраняется в displayName пользователя Firebase или в локальном хранилище.
+     */
+    suspend fun register(email: String, password: String, fullName: String = ""): Result<Unit> {
         val normalized = normalizeEmail(email)
-        val validation = validate(normalized, password) ?: return Result.failure(validationError(normalized, password))
+        val validation = validate(normalized, password)
+        if (validation != null) return Result.failure(IllegalArgumentException(validation))
         return if (firebaseAuth != null) {
             runCatching {
-                firebaseAuth!!.createUserWithEmailAndPassword(normalized, password).await()
+                val result = firebaseAuth!!.createUserWithEmailAndPassword(normalized, password).await()
+                if (fullName.isNotBlank()) {
+                    result.user?.updateProfile(
+                        UserProfileChangeRequest.Builder()
+                            .setDisplayName(fullName.trim())
+                            .build()
+                    )?.await()
+                }
             }.map { }
         } else {
-            localRegister(normalized, password)
+            localRegister(normalized, password, fullName)
         }
     }
 
@@ -108,16 +120,19 @@ class AuthRepository(context: Context) {
 
     // ---- Локальный режим ----
 
-    private fun localRegister(email: String, password: String): Result<Unit> {
+    private fun localRegister(email: String, password: String, fullName: String): Result<Unit> {
         val validation = validate(email, password)
         if (validation != null) return Result.failure(IllegalArgumentException(validation))
         if (prefs.getString(userKey(email), null) != null) {
             return Result.failure(IllegalArgumentException("Пользователь уже зарегистрирован"))
         }
-        prefs.edit()
+        val editor = prefs.edit()
             .putString(userKey(email), PasswordHasher.hash(password))
             .putString(KEY_SESSION_EMAIL, email)
-            .apply()
+        if (fullName.isNotBlank()) {
+            editor.putString(profileKey(email), fullName.trim())
+        }
+        editor.apply()
         _state.value = AuthState.SignedIn(email, PROVIDER_LOCAL)
         return Result.success(Unit)
     }
@@ -139,12 +154,9 @@ class AuthRepository(context: Context) {
         else -> null
     }
 
-    private fun validationError(email: String, password: String): IllegalArgumentException {
-        val message = validate(email, password) ?: "Ошибка валидации"
-        return IllegalArgumentException(message)
-    }
-
     private fun userKey(email: String) = "user:$email"
+
+    private fun profileKey(email: String) = "profile:$email"
 
     private fun normalizeEmail(email: String) = email.trim().lowercase()
 

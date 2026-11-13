@@ -18,7 +18,12 @@
     <string name="auth_switch_to_register">Нет аккаунта? Создать</string>
     <string name="auth_forgot_password">Забыли пароль?</string>
     <string name="auth_email">Email</string>
+    <string name="auth_first_name">Имя</string>
+    <string name="auth_last_name">Фамилия</string>
+    <string name="auth_patronymic">Отчество</string>
     <string name="auth_password">Пароль</string>
+    <string name="auth_confirm_password">Подтверждение пароля</string>
+    <string name="auth_invalid_field">Поле заполнено неверно</string>
     <string name="auth_google">Войти через Google</string>
     <string name="auth_facebook">Войти через Facebook</string>
     <string name="auth_offline_notice">Firebase не настроен — работает локальный режим (см. README в проекте).</string>

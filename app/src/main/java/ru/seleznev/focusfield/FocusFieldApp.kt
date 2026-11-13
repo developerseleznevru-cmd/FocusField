@@ -84,7 +84,7 @@ class AppContainer(context: Context) {
             }
             initializer { StatsViewModel(focusRepository) }
             initializer { BlockedItemsViewModel(blockRepository) }
-            initializer { SettingsViewModel(settingsRepository) }
+            initializer { SettingsViewModel(settingsRepository, authRepository) }
         }
     }
 }

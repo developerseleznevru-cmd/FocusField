@@ -23,8 +23,8 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun signIn(email: String, password: String) = launch { authRepository.signIn(email, password) }
 
-    fun register(email: String, password: String) =
-        launch { authRepository.register(email, password) }
+    fun register(email: String, password: String, fullName: String = "") =
+        launch { authRepository.register(email, password, fullName) }
 
     fun sendPasswordReset(email: String) = launch { authRepository.sendPasswordReset(email) }
 
