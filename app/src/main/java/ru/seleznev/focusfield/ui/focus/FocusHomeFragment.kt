@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -193,7 +194,8 @@ class FocusHomeFragment : Fragment() {
                     preview,
                     analysis
                 )
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e(TAG, "Не удалось запустить камеру", e)
                 Toast.makeText(requireContext(), R.string.camera_error, Toast.LENGTH_SHORT).show()
             }
         }, ContextCompat.getMainExecutor(requireContext()))
@@ -203,6 +205,10 @@ class FocusHomeFragment : Fragment() {
         val minutes = seconds / 60
         val rest = seconds % 60
         return getString(R.string.elapsed_format, minutes, rest)
+    }
+
+    companion object {
+        private const val TAG = "FocusHomeFragment"
     }
 
     override fun onDestroyView() {

@@ -104,9 +104,26 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 5. Откройте заблокированное приложение при активной сессии → оверлей; «Разрешить на 5 мин» — доступ открывается, счётчик «Помех» растёт.
 6. «Статистика» → гистограмма/диаграмма по сессиям.
 
+### Камера на эмуляторе
+
+У эмулятора нет настоящей камеры: фронтальная по умолчанию показывает встроенную
+3D-сцену («виртуальную комнату»), поэтому ML Kit не находит лицо и концентрация
+остаётся 0%. Чтобы приложение получало кадры с веб-камеры ПК:
+
+1. В `~/.android/avd/<AVD>.avd/config.ini` установите `hw.camera.front=webcam0`
+   (по умолчанию `emulated`);
+2. выполните **холодный запуск** эмулятора (например, `emulator -avd <AVD> -no-snapshot`),
+   конфиг камер читается только при старте;
+3. первые секунды превью может быть чёрным — веб-камере нужно время на захват
+   (в логе эмулятора это сопровождается предупреждениями `convert_to_i420`);
+4. зелёный индикатор камеры в статус-баре означает, что эмулятор захватывает
+   веб-камеру ПК.
+
+На реальном устройстве камера работает без дополнительных настроек.
+
 ## Тесты
 
-- **Юнит-тесты** (`app/src/test`): ConcentrationCalculator, BlinkDetector, DomainMatcher, PasswordHasher, StatsAggregator, ScheduleWindow, TaskRepository (fake DAO), 33 кейса — все зелёные.
+- **Юнит-тесты** (`app/src/test`): ConcentrationCalculator, BlinkDetector, DomainMatcher, PasswordHasher, StatsAggregator, ScheduleWindow, TaskRepository (fake DAO), RegistrationValidator — 46 кейсов, все зелёные.
 - **Инструментальные** (`app/src/androidTest`): smoke-тест MainActivity на Espresso.
 
 ## Отклонения от ТЗ (осознанные)
