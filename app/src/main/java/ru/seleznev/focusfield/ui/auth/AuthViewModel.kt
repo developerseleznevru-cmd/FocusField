@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import ru.seleznev.focusfield.data.model.AuthState
+import ru.seleznev.focusfield.data.model.LocalAccount
 import ru.seleznev.focusfield.data.repo.AuthRepository
 
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
@@ -14,6 +15,9 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     val state: StateFlow<AuthState> = authRepository.state
 
     val isFirebaseAvailable: Boolean get() = authRepository.isFirebaseAvailable
+
+    /** Последний использованный аккаунт (для предзаполнения email после выхода). */
+    val lastAccount: LocalAccount? get() = authRepository.lastAccount()
 
     private val _loading = MutableLiveData(false)
     val loading: LiveData<Boolean> = _loading
@@ -30,7 +34,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun signInWithGoogle() = launch { authRepository.signInWithGoogle() }
 
-    fun signInWithFacebook() = launch { authRepository.signInWithFacebook() }
+    fun signInWithVk() = launch { authRepository.signInWithVk() }
 
     fun consumeMessage() {
         _message.value = null

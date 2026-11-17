@@ -6,7 +6,7 @@ Android-приложение (Kotlin, MVVM), помогающее концент
 
 | Пункт ТЗ | Реализация |
 |---|---|
-| Аутентификация (Email, Google, Facebook, восстановление пароля) | `data/repo/AuthRepository`: Firebase Authentication; при отсутствии `google-services.json` — прозрачный локальный режим (пароли хешируются PBKDF-подобной схемой, данные в зашифрованных SharedPreferences). Google/Facebook — точки входа с понятной ошибкой, пока не настроена Firebase-консоль |
+| Аутентификация (Email, Google, ВКонтакте, восстановление пароля) | `data/repo/AuthRepository`: Firebase Authentication; при отсутствии `google-services.json` — прозрачный локальный режим (пароли хешируются PBKDF-подобной схемой, данные в зашифрованных SharedPreferences). Google/ВКонтакте — точки входа с понятной ошибкой, пока не выполнена настройка (см. README) |
 | Сбор биометрии (камера: моргание, лицо, глаза; Wear OS: пульс) | `biometrics/FaceAnalyzer` (CameraX + ML Kit Face Detection), `biometrics/BlinkDetector`; `service/wear/WearListenerService` принимает пульс/шаги с часов по пути `/focusfield/health` |
 | Анализ уровня концентрации (ML, SQLite + облако) | `biometrics/ConcentrationCalculator` — скоринг по открытости глаз, позе головы, улыбке; окно ~10 с; сессии и сэмплы хранятся в Room (SQLite), синхронизация в облако — REST/Firebase (см. Roadmap) |
 | Блокировка приложений и сайтов | `service/block/BlockingAccessibilityService` (определяет текущее приложение, читает адресную строку Chrome/Firefox/Яндекс.Браузера) + оверлей `BlockOverlayActivity` |
@@ -80,9 +80,18 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 1. В [Firebase Console](https://console.firebase.google.com) создайте проект с пакетом `ru.seleznev.focusfield`.
 2. Скачайте `google-services.json` → положите в `app/`.
 3. В **корневой** `build.gradle.kts` и `app/build.gradle.kts` подключите плагин `com.google.gms.google-services` (версия 4.4.x).
-4. В консоли включите провайдеров: **Email/Password**, при желании **Google** и **Facebook** (для Facebook нужен App ID из Meta for Developers).
+4. В консоли включите провайдеров: **Email/Password**, при желании **Google** (для Google нужен OAuth-клиент веб-приложения).
 
-Пока `google-services.json` отсутствует, экран входа показывает пометку о локальном режиме; кнопки социального входа возвращают сообщение «требуется настройка Firebase».
+Пока `google-services.json` отсутствует, экран входа показывает пометку о локальном режиме; кнопки социального входа возвращают сообщение о требуемой настройке.
+
+### Вход через ВКонтакте (VK ID)
+
+Кнопка «Войти через ВКонтакте» пока возвращает сообщение о требуемой настройке.
+Для включения реального входа:
+
+1. Зарегистрируйте приложение в [vk.com/editapp](https://vk.com/editapp?act=app_create) (платформа Web), получите `client_id`;
+2. подключите [VKID Android SDK](https://dev.vk.com/ru/mini-apps/sdk/android) к проекту;
+3. в `AuthRepository.signInWithVk()` замените заглушку на поток `VKID.authorize(...)` и обмен кода на токен.
 
 ## Разрешения и зачем они
 
@@ -131,7 +140,7 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 - **minSdk 24 вместо API 21.** Весь актуальный стек AndroidX (navigation 2.10, activity 1.13, fragment 1.9) требует API 24; для API 21 пришлось бы даунгрейдить библиотеки на версии 2022–2023 гг.
 - **MPAndroidChart v3.2.0** — тег v3.1.2 недоступен на JitPack.
 - **Jetpack Security (EncryptedSharedPreferences) deprecated upstream** — API остаётся рабочим; миграция на DataStore + Keystore в roadmap.
-- **Google/Facebook вход** — каркас готов, нужен Firebase-проект (инструкция выше).
+- **Google/ВКонтакте вход** — каркас готов: Google нужен Firebase-проект, ВКонтакте — зарегистрированное приложение VK ID (инструкции выше).
 - **Wear OS** — реализована приёмная сторона (приложение-компаньон для часов — отдельный проект).
 
 ## Roadmap

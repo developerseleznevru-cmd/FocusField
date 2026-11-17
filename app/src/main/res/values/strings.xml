@@ -25,7 +25,7 @@
     <string name="auth_confirm_password">Подтверждение пароля</string>
     <string name="auth_invalid_field">Поле заполнено неверно</string>
     <string name="auth_google">Войти через Google</string>
-    <string name="auth_facebook">Войти через Facebook</string>
+    <string name="auth_vk">Войти через ВКонтакте</string>
     <string name="auth_offline_notice">Firebase не настроен — работает локальный режим (см. README в проекте).</string>
 
     <!-- Сессия концентрации -->
@@ -72,6 +72,10 @@
     <string name="stats_range_week">Неделя</string>
     <string name="stats_range_month">Месяц</string>
     <string name="stats_chart_title">Концентрация по дням</string>
+    <string name="stats_legend_high">Высокая</string>
+    <string name="stats_legend_medium">Средняя</string>
+    <string name="stats_legend_low">Низкая</string>
+    <string name="stats_pie_subtitle">Концентрация</string>
     <string name="stats_sessions_count">Сессий: %1$d</string>
     <string name="stats_total_minutes">Всего в фокусе: %1$d мин</string>
     <string name="stats_interruptions">Помех: %1$d</string>

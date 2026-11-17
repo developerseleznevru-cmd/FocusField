@@ -148,13 +148,13 @@
                 android:text="@string/auth_google" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_facebook"
+                android:id="@+id/btn_vk"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                android:text="@string/auth_facebook" />
+                android:text="@string/auth_vk" />
         </LinearLayout>
 
         <ProgressBar

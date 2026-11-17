@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
 import ru.seleznev.focusfield.data.crypto.PasswordHasher
 import ru.seleznev.focusfield.data.model.AuthState
+import ru.seleznev.focusfield.data.model.LocalAccount
 import ru.seleznev.focusfield.data.prefs.SecurePrefs
 
 /**
@@ -70,6 +71,7 @@ class AuthRepository(context: Context) {
                             .build()
                     )?.await()
                 }
+                rememberLast(normalized, fullName.trim())
             }.map { }
         } else {
             localRegister(normalized, password, fullName)
@@ -82,6 +84,7 @@ class AuthRepository(context: Context) {
         return if (firebaseAuth != null) {
             runCatching {
                 firebaseAuth!!.signInWithEmailAndPassword(normalized, password).await()
+                rememberLast(normalized, firebaseAuth!!.currentUser?.displayName.orEmpty())
             }.map { }
         } else {
             localSignIn(normalized, password)
@@ -104,11 +107,12 @@ class AuthRepository(context: Context) {
         return Result.failure(NotImplementedError("Настройте Firebase и клиент Google (README)"))
     }
 
-    /** Вход через Facebook. Требует настроенного Firebase-провайдера Facebook. */
-    suspend fun signInWithFacebook(): Result<Unit> {
-        firebaseAuth ?: return Result.failure(IllegalStateException(ERROR_PROVIDER_NOT_CONFIGURED))
-        return Result.failure(NotImplementedError("Настройте провайдера Facebook в Firebase (README)"))
-    }
+    /**
+     * Вход через VK ID. Требует зарегистрированного приложения VK ID
+     * (client_id и redirect URI) — см. README, раздел «Вход через ВКонтакте».
+     */
+    suspend fun signInWithVk(): Result<Unit> =
+        Result.failure(IllegalStateException(ERROR_VK_NOT_CONFIGURED))
 
     fun signOut() {
         firebaseAuth?.signOut()
@@ -133,6 +137,7 @@ class AuthRepository(context: Context) {
             editor.putString(profileKey(email), fullName.trim())
         }
         editor.apply()
+        rememberLast(email, fullName.trim())
         _state.value = AuthState.SignedIn(email, PROVIDER_LOCAL)
         return Result.success(Unit)
     }
@@ -144,8 +149,43 @@ class AuthRepository(context: Context) {
             return Result.failure(IllegalArgumentException("Неверный пароль"))
         }
         prefs.edit().putString(KEY_SESSION_EMAIL, email).apply()
+        rememberLast(email, prefs.getString(profileKey(email), null).orEmpty())
         _state.value = AuthState.SignedIn(email, PROVIDER_LOCAL)
         return Result.success(Unit)
+    }
+
+    // ---- Сохранённые аккаунты ----
+
+    /**
+     * Запоминает последний использованный аккаунт. Ключи last_* НЕ удаляются
+     * при выходе: экран входа после logout показывает сохранённых пользователей.
+     */
+    private fun rememberLast(email: String, fullName: String) {
+        prefs.edit()
+            .putString(KEY_LAST_EMAIL, email)
+            .putString(KEY_LAST_PROFILE, fullName)
+            .apply()
+    }
+
+    /** Последний использованный аккаунт (для предзаполнения экрана входа). */
+    fun lastAccount(): LocalAccount? {
+        val email = prefs.getString(KEY_LAST_EMAIL, null) ?: return null
+        return LocalAccount(email, prefs.getString(KEY_LAST_PROFILE, null).orEmpty())
+    }
+
+    /**
+     * Зарегистрированные локально аккаунты (резервный режим без Firebase).
+     * В Firebase-режиме список пуст: учётные записи хранятся на сервере.
+     */
+    fun registeredAccounts(): List<LocalAccount> {
+        if (firebaseAuth != null) return emptyList()
+        return prefs.all.keys
+            .filter { it.startsWith("user:") }
+            .map { key ->
+                val email = key.removePrefix("user:")
+                LocalAccount(email, prefs.getString(profileKey(email), null).orEmpty())
+            }
+            .sortedBy { it.email }
     }
 
     private fun validate(email: String, password: String): String? = when {
@@ -162,6 +202,8 @@ class AuthRepository(context: Context) {
 
     private companion object {
         const val KEY_SESSION_EMAIL = "session_email"
+        const val KEY_LAST_EMAIL = "last_email"
+        const val KEY_LAST_PROFILE = "last_profile"
         const val PROVIDER_LOCAL = "local"
         const val PROVIDER_FIREBASE = "firebase"
         const val MIN_PASSWORD_LENGTH = 6
@@ -170,6 +212,8 @@ class AuthRepository(context: Context) {
             "Восстановление пароля недоступно в локальном режиме: настройте Firebase (см. README)"
         const val ERROR_PROVIDER_NOT_CONFIGURED =
             "Социальный вход требует настройки Firebase (см. README)"
+        const val ERROR_VK_NOT_CONFIGURED =
+            "Вход через ВКонтакте требует регистрации приложения VK ID (см. README)"
         val EMAIL_REGEX = Regex(EMAIL_REGEX_PATTERN)
     }
 }

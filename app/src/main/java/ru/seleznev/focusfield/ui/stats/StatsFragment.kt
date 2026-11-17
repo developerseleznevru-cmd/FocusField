@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -16,6 +17,7 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.google.android.material.color.MaterialColors
 import ru.seleznev.focusfield.R
 import ru.seleznev.focusfield.data.model.DayAverage
 import ru.seleznev.focusfield.data.model.FocusBand
@@ -92,7 +94,24 @@ class StatsFragment : Fragment() {
 
         binding.pieChart.description.isEnabled = false
         binding.pieChart.setUsePercentValues(true)
-        binding.pieChart.legend.isEnabled = false
+        // Подписи срезов («Высокая концентрация» и т.п.) на узких срезах
+        // пересекаются между собой — убираем их с диаграммы.
+        binding.pieChart.setDrawEntryLabels(false)
+        binding.pieChart.setDrawSliceText(false)
+        // Названия категорий выносим в легенду под диаграммой.
+        binding.pieChart.legend.isEnabled = true
+        binding.pieChart.legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
+        binding.pieChart.legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
+        binding.pieChart.legend.orientation = Legend.LegendOrientation.HORIZONTAL
+        binding.pieChart.legend.setDrawInside(false)
+        binding.pieChart.legend.textSize = 13f
+        binding.pieChart.legend.xEntrySpace = 10f
+        binding.pieChart.legend.yEntrySpace = 4f
+        binding.pieChart.legend.isWordWrapEnabled = true
+        binding.pieChart.legend.textColor = MaterialColors.getColor(
+            binding.pieChart,
+            com.google.android.material.R.attr.colorOnSurface
+        )
     }
 
     private fun renderBarChart(dayAverages: List<DayAverage>) {
@@ -113,9 +132,18 @@ class StatsFragment : Fragment() {
 
     private fun renderPieChart(distribution: Map<FocusBand, Int>) {
         val entries = listOf(
-            PieEntry(distribution[FocusBand.HIGH]?.toFloat() ?: 0f, getString(R.string.band_high)),
-            PieEntry(distribution[FocusBand.MEDIUM]?.toFloat() ?: 0f, getString(R.string.band_medium)),
-            PieEntry(distribution[FocusBand.LOW]?.toFloat() ?: 0f, getString(R.string.band_low))
+            PieEntry(
+                distribution[FocusBand.HIGH]?.toFloat() ?: 0f,
+                getString(R.string.stats_legend_high)
+            ),
+            PieEntry(
+                distribution[FocusBand.MEDIUM]?.toFloat() ?: 0f,
+                getString(R.string.stats_legend_medium)
+            ),
+            PieEntry(
+                distribution[FocusBand.LOW]?.toFloat() ?: 0f,
+                getString(R.string.stats_legend_low)
+            )
         )
         val dataSet = PieDataSet(entries, "").apply {
             colors = listOf(

@@ -76,7 +76,7 @@ class AuthFragment : Fragment() {
         bindErrorClearing(binding.inputPatronymic, binding.inputPatronymicLayout)
 
         binding.btnGoogle.setOnClickListener { viewModel.signInWithGoogle() }
-        binding.btnFacebook.setOnClickListener { viewModel.signInWithFacebook() }
+        binding.btnVk.setOnClickListener { viewModel.signInWithVk() }
 
         viewModel.message.observe(viewLifecycleOwner) { message ->
             if (message != null) {
@@ -103,6 +103,8 @@ class AuthFragment : Fragment() {
             binding.inputLastName.text?.clear()
             binding.inputPatronymic.text?.clear()
             binding.inputConfirmPassword.text?.clear()
+            // После выхода email последнего аккаунта подставляется автоматически.
+            prefillLastAccountEmail()
         }
         if (isRegisterMode) {
             binding.title.text = getString(R.string.auth_register_title)
@@ -113,6 +115,13 @@ class AuthFragment : Fragment() {
             binding.btnPrimary.text = getString(R.string.auth_login)
             binding.btnToggleMode.text = getString(R.string.auth_switch_to_register)
         }
+    }
+
+    /** Предзаполнение email последнего аккаунта, если поле пустое. */
+    private fun prefillLastAccountEmail() {
+        val current = binding.inputEmail.text?.toString().orEmpty()
+        if (current.isNotBlank()) return
+        viewModel.lastAccount?.let { binding.inputEmail.setText(it.email) }
     }
 
     /**

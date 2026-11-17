@@ -97,10 +97,19 @@
                 android:layout_height="240dp" />
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/pie_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:text="@string/stats_pie_subtitle"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="1dp">
 
