@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Значок камеры на бейдже аватара: подсказка «нажмите, чтобы добавить фото». -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Корпус фотоаппарата с выступом-«шторкой» и отверстием объектива. -->
+    <path
+        android:fillColor="@color/white"
+        android:fillType="evenOdd"
+        android:pathData="M4,7h4l2,-2h4l2,2h4a2,2,0,0,1,2,2v9a2,2,0,0,1,-2,2H4a2,2,0,0,1,-2,-2V9a2,2,0,0,1,2,-2zM8.5,13a3.5,3.5,0,1,0,7,0a3.5,3.5,0,1,0,-7,0z" />
+</vector>

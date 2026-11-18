@@ -25,6 +25,7 @@ import ru.seleznev.focusfield.service.wear.WearHealthStore
 import ru.seleznev.focusfield.ui.auth.AuthViewModel
 import ru.seleznev.focusfield.ui.blocked.BlockedItemsViewModel
 import ru.seleznev.focusfield.ui.focus.FocusViewModel
+import ru.seleznev.focusfield.ui.profile.ProfileViewModel
 import ru.seleznev.focusfield.ui.settings.SettingsViewModel
 import ru.seleznev.focusfield.ui.stats.StatsViewModel
 import ru.seleznev.focusfield.ui.tasks.TasksViewModel
@@ -65,6 +66,7 @@ class AppContainer(context: Context) {
     val viewModelFactory: ViewModelProvider.Factory by lazy {
         viewModelFactory {
             initializer { AuthViewModel(authRepository) }
+            initializer { ProfileViewModel(authRepository) }
             initializer {
                 FocusViewModel(
                     focusRepository = focusRepository,

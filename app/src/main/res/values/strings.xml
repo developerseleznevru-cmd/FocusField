@@ -28,6 +28,14 @@
     <string name="auth_vk">Войти через ВКонтакте</string>
     <string name="auth_offline_notice">Firebase не настроен — работает локальный режим (см. README в проекте).</string>
 
+    <!-- Профиль после регистрации -->
+    <string name="profile_label">Профиль</string>
+    <string name="profile_title">Редактирование профиля</string>
+    <string name="profile_subtitle">Заполните данные профиля — их можно изменить позже в настройках.</string>
+    <string name="profile_save">Сохранить и продолжить</string>
+    <string name="profile_skip">Пропустить</string>
+    <string name="profile_avatar_desc">Фото профиля. Нажмите, чтобы выбрать изображение</string>
+
     <!-- Сессия концентрации -->
     <string name="session_start">Начать сессию</string>
     <string name="session_stop">Завершить сессию</string>

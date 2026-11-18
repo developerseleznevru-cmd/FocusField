@@ -83,7 +83,14 @@ class MainActivity : AppCompatActivity() {
                     when (state) {
                         is AuthState.SignedIn -> {
                             if (current != null && current == R.id.authFragment) {
-                                navController.navigate(R.id.action_auth_to_main)
+                                // После регистрации — экран редактирования профиля,
+                                // при обычном входе — сразу в приложение.
+                                val target = if (container.authRepository.consumeProfileSetup()) {
+                                    R.id.action_auth_to_profile
+                                } else {
+                                    R.id.action_auth_to_main
+                                }
+                                navController.navigate(target)
                             }
                         }
 
@@ -110,6 +117,12 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navHost =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
-        return navHost.navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+        val navController = navHost.navController
+        // Экран профиля после регистрации — тупик «назад»: идём вперёд в приложение.
+        if (navController.currentDestination?.id == R.id.profileFragment) {
+            navController.navigate(R.id.action_profile_to_main)
+            return true
+        }
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 }

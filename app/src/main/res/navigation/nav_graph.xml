@@ -15,6 +15,27 @@
             app:destination="@id/mainGraph"
             app:popUpTo="@id/authFragment"
             app:popUpToInclusive="true" />
+        <!-- После регистрации: экран редактирования профиля вместо входа. -->
+        <action
+            android:id="@+id/action_auth_to_profile"
+            app:destination="@id/profileFragment"
+            app:popUpTo="@id/authFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Экран редактирования профиля: показывается один раз после регистрации.
+         Кнопки «назад/up» ведут вперёд в приложение (action_profile_to_main),
+         а не назад на экран входа. -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="ru.seleznev.focusfield.ui.profile.ProfileFragment"
+        android:label="@string/profile_label"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_main"
+            app:destination="@id/mainGraph"
+            app:popUpTo="@id/profileFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <navigation

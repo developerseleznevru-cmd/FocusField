@@ -6,6 +6,12 @@
 
     <style name="Theme.FocusField" parent="Base.Theme.FocusField" />
 
+    <!-- Круглая форма для аватара профиля (ShapeableImageView). -->
+    <style name="ShapeAppearanceOverlay.FocusField.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
     <!-- Полноэкранный оверлей блокировки поверх других приложений. -->
     <style name="Theme.FocusField.BlockOverlay" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>

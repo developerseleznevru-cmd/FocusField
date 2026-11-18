@@ -19,7 +19,7 @@ Android-приложение (Kotlin, MVVM), помогающее концент
 | CameraX/ML Kit, Room, Firebase Auth, MPAndroidChart | Да (см. таблицу версий в `gradle/libs.versions.toml`) |
 | REST API | Retrofit (`data/remote/SyncApi`): отправка сессий, загрузка задач из внешнего API |
 | Шифрование данных, защита доступа | Зашифрованные SharedPreferences (Android Keystore, AES-256), хеширование паролей, `allowBackup=false` |
-| Юнит-тесты + Espresso | 33 юнит-теста (концентрация, моргание, домены, хеши, статистика, репозиторий задач, расписание) + инструментальный smoke-тест MainActivity |
+| Юнит-тесты + Espresso | 54 юнит-теста (концентрация, моргание, домены, хеши, статистика, репозиторий задач, расписание, ФИО профиля) + 13 инструментальных (smoke, сохранность аккаунтов, флоу регистрации, аватар/Photo Picker, пропуск профиля) |
 
 ## Архитектура и поток данных
 
@@ -68,7 +68,7 @@ ru.seleznev.focusfield
 set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
 gradlew.bat :app:assembleDebug        # сборка APK
 gradlew.bat :app:testDebugUnitTest    # юнит-тесты
-gradlew.bat :app:connectedDebugAndroidTest  # Espresso (нужно устройство/эмулятор)
+gradlew.bat :app:connectedDebugAndroidTest  # Espresso (нужно устройство/эмулятор; ⚠️ стирает данные приложения — см. раздел «Тесты»)
 ```
 
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
@@ -107,11 +107,14 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 ## Ручная проверка (тест-план)
 
 1. Запуск → экран входа → «Нет аккаунта? Создать» → регистрация (локальный режим).
-2. Вкладка «Фокус» → разрешить камеру → «Начать сессию» → индикатор концентрации оживает; уберите лицо — score падает.
-3. Настройки → «Сервис доступности» → включить FocusField; «Оверлей» → разрешить.
-4. «Список блокировки» → добавить YouTube/VK и сайт `vk.com`.
-5. Откройте заблокированное приложение при активной сессии → оверлей; «Разрешить на 5 мин» — доступ открывается, счётчик «Помех» растёт.
-6. «Статистика» → гистограмма/диаграмма по сессиям.
+2. Сразу после регистрации открывается **«Редактирование профиля»**: email аккаунта показывается (не редактируется), ФИО предзаполнено; кнопки «Сохранить и продолжить» и «Пропустить» закреплены внизу экрана. Сохранение («Сохранить и продолжить») → переход в приложение; «Пропустить» — сразу на экран «Фокус» без редактирования. Кнопка «назад» на этом экране тоже ведёт в приложение, а не на экран входа.
+3. Аватар: круг перед email → нажать → открывается системный **Photo Picker** (разрешение не нужно) → выбрать фото → фото обрезается в круг и сохраняется для аккаунта (повторный вход показывает его снова).
+4. Вкладка «Фокус» → разрешить камеру → «Начать сессию» → индикатор концентрации оживает; уберите лицо — score падает.
+5. Настройки → «Сервис доступности» → включить FocusField; «Оверлей» → разрешить.
+6. «Список блокировки» → добавить YouTube/VK и сайт `vk.com`.
+7. Откройте заблокированное приложение при активной сессии → оверлей; «Разрешить на 5 мин» — доступ открывается, счётчик «Помех» растёт.
+8. «Статистика» → гистограмма/диаграмма по сессиям.
+9. Настройки → «Выйти из аккаунта» → экран входа: email последнего аккаунта подставлен автоматически (список аккаунтов не отображается), повторный вход работает.
 
 ### Камера на эмуляторе
 
@@ -132,8 +135,17 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Тесты
 
-- **Юнит-тесты** (`app/src/test`): ConcentrationCalculator, BlinkDetector, DomainMatcher, PasswordHasher, StatsAggregator, ScheduleWindow, TaskRepository (fake DAO), RegistrationValidator — 46 кейсов, все зелёные.
-- **Инструментальные** (`app/src/androidTest`): smoke-тест MainActivity на Espresso.
+- **Юнит-тесты** (`app/src/test`): ConcentrationCalculator, BlinkDetector, DomainMatcher, PasswordHasher, StatsAggregator, ScheduleWindow, TaskRepository (fake DAO), RegistrationValidator, ProfileForm — 54 кейса, все зелёные.
+- **Инструментальные** (`app/src/androidTest`, 13 кейсов): smoke-тест MainActivity (Espresso), `AuthPersistenceTest` (сохранность аккаунта после выхода, реальные EncryptedSharedPreferences), `AvatarStoreTest` (сохранение фото, даунсемплинг ≤512 px, имя файла по аккаунту), `RegistrationFlowTest` (регистрация → экран профиля → аватар открывает Photo Picker → сохранение/пропуск → приложение; кириллица вводится через Espresso `replaceText`).
+
+⚠️ `gradlew connectedDebugAndroidTest` переустанавливает приложение на устройстве **вместе с данными**. Инструментальные тесты запускайте вручную:
+
+```bat
+adb install -r app\build\outputs\apk\debug\app-debug.apk
+adb install -r app\build\outputs\apk\androidTest\debug\app-debug-androidTest.apk
+adb shell am instrument -e class ru.seleznev.focusfield.RegistrationFlowTest -w ru.seleznev.focusfield.test/androidx.test.runner.AndroidJUnitRunner
+adb uninstall ru.seleznev.focusfield.test
+```
 
 ## Отклонения от ТЗ (осознанные)
 
