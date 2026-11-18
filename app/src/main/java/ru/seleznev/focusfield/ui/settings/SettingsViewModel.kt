@@ -4,18 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.StateFlow
 import ru.seleznev.focusfield.data.model.SettingsState
-import ru.seleznev.focusfield.data.repo.AuthRepository
 import ru.seleznev.focusfield.data.repo.SettingsRepository
 
 class SettingsViewModel(
-    private val settingsRepository: SettingsRepository,
-    private val authRepository: AuthRepository
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     val state: StateFlow<SettingsState> = settingsRepository.state
-
-    /** Выход из аккаунта: MainActivity вернёт пользователя на экран входа. */
-    fun signOut() = authRepository.signOut()
 
     fun setTheme(themeCode: Int) = update { it.copy(theme = themeCode) }
 

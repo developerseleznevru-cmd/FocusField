@@ -197,6 +197,25 @@ class RegistrationFlowTest {
             stored == "Тестов Тест Тестович")
     }
 
+    @Test
+    fun accountTabMovesLogoutOutOfSettings() {
+        registerNewUser()
+        // В приложение (кнопка «Пропустить»).
+        onView(withId(R.id.btn_skip)).perform(scrollTo(), click())
+        onView(withId(R.id.bottom_nav)).check(matches(isDisplayed()))
+
+        // «Аккаунт» — отдельная вкладка нижнего меню с кнопкой выхода.
+        onView(withId(R.id.accountFragment)).perform(click())
+        onView(withId(R.id.btn_logout)).check(matches(isDisplayed()))
+        onView(withId(R.id.account_email)).check(matches(isDisplayed()))
+        captureView(R.id.account_root, "account_screen.png")
+
+        // В настройках раздел «Аккаунт» больше нет.
+        onView(withId(R.id.settingsFragment)).perform(click())
+        onView(withText("Внешний вид")).check(matches(isDisplayed()))
+        onView(withText("Выйти из аккаунта")).check(doesNotExist())
+    }
+
     /** Открывает экран входа, переключается в режим регистрации и регистрирует пользователя. */
     private fun registerNewUser(): String {
         val email = "flow-${System.currentTimeMillis()}@example.com"

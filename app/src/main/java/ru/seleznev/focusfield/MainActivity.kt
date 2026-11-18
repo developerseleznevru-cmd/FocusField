@@ -53,7 +53,13 @@ class MainActivity : AppCompatActivity() {
         val navController = navHost.navController
 
         appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.focusHomeFragment, R.id.tasksFragment, R.id.statsFragment, R.id.settingsFragment)
+            setOf(
+                R.id.focusHomeFragment,
+                R.id.tasksFragment,
+                R.id.statsFragment,
+                R.id.settingsFragment,
+                R.id.accountFragment
+            )
         )
         setSupportActionBar(binding.toolbar)
         binding.bottomNav.setupWithNavController(navController)

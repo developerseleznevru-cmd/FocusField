@@ -6,6 +6,14 @@
     <string name="nav_tasks">Задачи</string>
     <string name="nav_stats">Статистика</string>
     <string name="nav_settings">Настройки</string>
+    <string name="nav_account">Аккаунт</string>
+
+    <!-- Экран «Аккаунт» (вкладка нижнего меню). -->
+    <string name="account_logout">Выйти из аккаунта</string>
+    <string name="account_logout_title">Выйти из аккаунта?</string>
+    <string name="account_logout_message">Вы вернётесь на экран входа.</string>
+    <string name="account_logout_confirm">Выйти</string>
+    <string name="common_cancel">Отмена</string>
     <string name="auth_label">Вход</string>
     <string name="action_settings">Настройки</string>
 

@@ -95,10 +95,4 @@
             app:summary="Требуется для показа экрана блокировки"
             app:title="Оверлей поверх окон" />
     </PreferenceCategory>
-
-    <PreferenceCategory app:title="Аккаунт">
-        <Preference
-            app:key="logout"
-            app:title="Выйти из аккаунта" />
-    </PreferenceCategory>
 </PreferenceScreen>
