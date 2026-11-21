@@ -68,7 +68,7 @@ class AppContainer(context: Context) {
         viewModelFactory {
             initializer { AuthViewModel(authRepository) }
             initializer { ProfileViewModel(authRepository) }
-            initializer { AccountViewModel(authRepository) }
+            initializer { AccountViewModel(authRepository, focusRepository) }
             initializer {
                 FocusViewModel(
                     focusRepository = focusRepository,

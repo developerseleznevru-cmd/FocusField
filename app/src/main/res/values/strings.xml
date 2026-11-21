@@ -13,6 +13,41 @@
     <string name="account_logout_title">Выйти из аккаунта?</string>
     <string name="account_logout_message">Вы вернётесь на экран входа.</string>
     <string name="account_logout_confirm">Выйти</string>
+    <string name="account_edit_profile">Редактировать профиль</string>
+    <string name="account_status_local">Локальный режим — Firebase не настроен</string>
+    <string name="account_status_firebase">Аккаунт синхронизируется с Firebase</string>
+
+    <!-- Сводка статистики на экране «Аккаунт» (компактный виджет). -->
+    <string name="account_stats_title">Статистика фокуса</string>
+    <string name="account_stat_sessions">Сессий</string>
+    <string name="account_stat_focus">В фокусе</string>
+    <string name="account_stat_streak">Серия</string>
+    <string name="account_stat_best_day">Лучший день</string>
+    <string name="account_stat_days">%1$d дн</string>
+
+    <!-- Статусы разрешений (переход в системные настройки по нажатию). -->
+    <string name="account_permissions_title">Разрешения</string>
+    <string name="account_perm_camera">Камера</string>
+    <string name="account_perm_accessibility">Сервис доступности</string>
+    <string name="account_perm_overlay">Оверлей поверх окон</string>
+    <string name="account_perm_granted">✓ Разрешено</string>
+    <string name="account_perm_missing">✗ Не выдано</string>
+
+    <!-- Безопасность: смена пароля и удаление аккаунта. -->
+    <string name="account_security_title">Безопасность</string>
+    <string name="account_change_password">Сменить пароль</string>
+    <string name="account_delete">Удалить аккаунт</string>
+    <string name="account_delete_title">Удалить аккаунт?</string>
+    <string name="account_delete_message">Профиль, статистика и учётные данные будут удалены безвозвратно.</string>
+    <string name="account_delete_confirm">Удалить</string>
+    <string name="account_delete_second_title">Вы уверены?</string>
+    <string name="account_delete_second_message">Это действие нельзя отменить.</string>
+    <string name="account_password_title">Смена пароля</string>
+    <string name="account_password_current">Текущий пароль</string>
+    <string name="account_password_new">Новый пароль</string>
+    <string name="account_password_repeat">Повторите новый пароль</string>
+    <string name="account_password_changed">Пароль изменён</string>
+    <string name="account_password_mismatch">Пароли не совпадают</string>
     <string name="common_cancel">Отмена</string>
     <string name="auth_label">Вход</string>
     <string name="action_settings">Настройки</string>
@@ -41,6 +76,8 @@
     <string name="profile_title">Редактирование профиля</string>
     <string name="profile_subtitle">Заполните данные профиля — их можно изменить позже в настройках.</string>
     <string name="profile_save">Сохранить и продолжить</string>
+    <string name="profile_save_only">Сохранить</string>
+    <string name="profile_subtitle_edit">Измените ФИО или фото профиля — они сохранятся в аккаунте.</string>
     <string name="profile_skip">Пропустить</string>
     <string name="profile_avatar_desc">Фото профиля. Нажмите, чтобы выбрать изображение</string>
 

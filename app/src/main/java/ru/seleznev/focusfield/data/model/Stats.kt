@@ -1,6 +1,7 @@
 package ru.seleznev.focusfield.data.model
 
 import ru.seleznev.focusfield.util.DayMath
+import java.util.TimeZone
 
 /** Диапазон концентрации для статистики и блокировки. */
 enum class FocusBand {
@@ -37,6 +38,13 @@ data class FocusSummary(
     val totalMinutes: Long,
     val avgScore: Int,
     val interruptions: Int
+)
+
+/** Лучший день по суммарному времени в фокусе. */
+data class BestDay(
+    /** Начало дня (00:00). */
+    val dayStart: Long,
+    val totalMinutes: Long
 )
 
 /**
@@ -86,6 +94,36 @@ object StatsAggregator {
             avgScore = if (scores.isEmpty()) -1 else scores.average().toInt(),
             interruptions = ended.sumOf { it.interruptions }
         )
+    }
+
+    /**
+     * Текущая серия дней подряд с сессиями: если сегодня сессий ещё нет,
+     * серия считается от вчера (день ещё не закончился).
+     */
+    fun streakDays(sessions: List<FocusSession>, now: Long, zone: TimeZone): Int {
+        val days = sessions
+            .filter { it.endedAt > 0 && it.avgScore >= 0 }
+            .map { DayMath.startOfDay(it.startedAt, zone) }
+            .toHashSet()
+        var day = DayMath.startOfDay(now, zone)
+        if (day !in days) day -= MILLIS_PER_DAY
+        var streak = 0
+        while (day in days) {
+            streak++
+            day -= MILLIS_PER_DAY
+        }
+        return streak
+    }
+
+    /** День с максимальным суммарным временем в фокусе; null — если нет данных. */
+    fun bestDay(sessions: List<FocusSession>, zone: TimeZone): BestDay? {
+        return sessions
+            .filter { it.endedAt > 0 }
+            .groupBy { DayMath.startOfDay(it.startedAt, zone) }
+            .map { (dayStart, inDay) ->
+                BestDay(dayStart, inDay.sumOf { (it.endedAt - it.startedAt) / 60_000 })
+            }
+            .maxByOrNull { it.totalMinutes }
     }
 
     const val MILLIS_PER_DAY: Long = 24L * 60 * 60 * 1000

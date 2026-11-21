@@ -243,6 +243,73 @@ class AuthRepository(context: Context) {
         }
     }
 
+    // ---- Смена пароля и удаление аккаунта ----
+
+    /**
+     * Смена пароля текущего аккаунта. В локальном режиме — проверка старого
+     * пароля и перехеширование ([PasswordHasher]); в Firebase — смена на сервере
+     * (может потребовать недавнего входа).
+     */
+    suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit> {
+        val email = currentEmail()
+        if (email.isBlank()) return Result.failure(IllegalStateException("Нет активной сессии"))
+        if (newPassword.length < MIN_PASSWORD_LENGTH) {
+            return Result.failure(
+                IllegalArgumentException("Пароль не короче $MIN_PASSWORD_LENGTH символов")
+            )
+        }
+        val firebase = firebaseAuth
+        if (firebase != null) {
+            return runCatching {
+                val user = firebase.currentUser
+                    ?: error("Нет активной сессии")
+                // Требует недавнего входа (reauthenticate): при ошибке — перелогин.
+                user.updatePassword(newPassword).await()
+            }.map { }
+        }
+        val stored = prefs.getString(userKey(email), null)
+            ?: return Result.failure(IllegalStateException("Аккаунт не найден"))
+        if (!PasswordHasher.verify(currentPassword, stored)) {
+            return Result.failure(IllegalArgumentException("Неверный текущий пароль"))
+        }
+        prefs.edit().putString(userKey(email), PasswordHasher.hash(newPassword)).apply()
+        return Result.success(Unit)
+    }
+
+    /**
+     * Удаление текущего аккаунта и его локальных данных (user:*, profile:*,
+     * даты, аватар, сессия). В Firebase — удаление пользователя на сервере.
+     * После успеха состояние становится [AuthState.SignedOut].
+     */
+    suspend fun deleteAccount(): Result<Unit> {
+        val email = currentEmail()
+        if (email.isBlank()) return Result.failure(IllegalStateException("Нет активной сессии"))
+        val firebase = firebaseAuth
+        if (firebase != null) {
+            return runCatching {
+                val user = firebase.currentUser ?: error("Нет активной сессии")
+                user.delete().await()
+                clearLocalData(email)
+            }.map { }
+        }
+        clearLocalData(email)
+        _state.value = AuthState.SignedOut
+        return Result.success(Unit)
+    }
+
+    /** Очистка локальных данных аккаунта: учётка, профиль, даты, аватар, сессия. */
+    private fun clearLocalData(email: String) {
+        avatarFile(email)?.delete()
+        prefs.edit()
+            .remove(userKey(email))
+            .remove(profileKey(email))
+            .remove(KEY_SESSION_EMAIL)
+            .apply()
+        if (prefs.getString(KEY_LAST_EMAIL, null) == email) {
+            prefs.edit().remove(KEY_LAST_EMAIL).remove(KEY_LAST_PROFILE).apply()
+        }
+    }
+
     // ---- Локальный режим ----
 
     private fun localRegister(email: String, password: String, fullName: String): Result<Unit> {

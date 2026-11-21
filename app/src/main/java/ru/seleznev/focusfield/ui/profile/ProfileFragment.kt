@@ -22,13 +22,14 @@ import ru.seleznev.focusfield.ui.auth.RegistrationValidator
 import ru.seleznev.focusfield.ui.common.appContainer
 
 /**
- * Редактирование профиля сразу после регистрации: email аккаунта
- * отображается (не редактируется), ФИО и фото профиля заполняются
- * и сохраняются. Фото выбирается в системном Photo Picker.
+ * Профиль: email аккаунта отображается (не редактируется), ФИО и фото
+ * профиля заполняются и сохраняются. Фото выбирается в системном Photo Picker.
  *
- * После сохранения (по кнопке «Пропустить» или «назад/up») пользователь
- * уходит вперёд в приложение — назад на экран входа путь закрыт
- * (см. nav_graph).
+ * Два режима (аргумент [ARG_EDIT_MODE]):
+ *  - после регистрации: «Пропустить»/«назад» ведут вперёд в приложение,
+ *    назад на экран входа путь закрыт (см. nav_graph);
+ *  - редактирование из вкладки «Аккаунт»: без «Пропустить», после сохранения
+ *    и по «назад» — возврат на экран «Аккаунт» (popBackStack).
  */
 class ProfileFragment : Fragment() {
 
@@ -36,6 +37,10 @@ class ProfileFragment : Fragment() {
     private val binding get() = requireNotNull(_binding)
 
     private val viewModel: ProfileViewModel by viewModels { appContainer.viewModelFactory }
+
+    /** true — режим редактирования из вкладки «Аккаунт» (см. KDoc). */
+    private val isEditMode: Boolean
+        get() = arguments?.getBoolean(ARG_EDIT_MODE, false) == true
 
     /** Системный Photo Picker: доступ к галерее без запроса разрешений. */
     private val pickAvatar = registerForActivityResult(
@@ -57,6 +62,7 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         prefillFields()
+        applyMode()
 
         binding.avatarContainer.setOnClickListener {
             pickAvatar.launch(
@@ -81,7 +87,7 @@ class ProfileFragment : Fragment() {
 
         // «Пропустить»: вход в приложение без редактирования профиля —
         // тот же переход на стартовый экран «Фокус» (action_profile_to_main).
-        binding.btnSkip.setOnClickListener { goToApp() }
+        binding.btnSkip.setOnClickListener { finish() }
 
         bindErrorClearing(binding.inputFirstName, binding.inputFirstNameLayout)
         bindErrorClearing(binding.inputLastName, binding.inputLastNameLayout)
@@ -103,18 +109,41 @@ class ProfileFragment : Fragment() {
         viewModel.saved.observe(viewLifecycleOwner) { saved ->
             if (saved) {
                 viewModel.consumeSaved()
-                goToApp()
+                finish()
             }
         }
 
-        // Кнопка «назад» ведёт вперёд в приложение: экран входа закрыт
-        // (popUpTo authFragment inclusive), возвращаться туда некуда.
+        // Режим редактирования — обычный возврат; после регистрации «назад»
+        // ведёт вперёд в приложение: экран входа закрыт (popUpTo inclusive).
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() = goToApp()
+            object : OnBackPressedCallback(!isEditMode) {
+                override fun handleOnBackPressed() = finish()
             }
         )
+    }
+
+    /**
+     * Режим редактирования из вкладки «Аккаунт»: без «Пропустить»,
+     * кнопка «Сохранить», подзаголовок о правке данных.
+     */
+    private fun applyMode() {
+        if (!isEditMode) return
+        binding.btnSkip.isVisible = false
+        binding.btnSave.setText(R.string.profile_save_only)
+        binding.profileSubtitle.setText(R.string.profile_subtitle_edit)
+    }
+
+    /**
+     * Завершение экрана: в режиме редактирования — возврат на «Аккаунт»,
+     * после регистрации — переход в приложение.
+     */
+    private fun finish() {
+        if (isEditMode) {
+            findNavController().popBackStack()
+        } else {
+            findNavController().navigate(R.id.action_profile_to_main)
+        }
     }
 
     /** Предзаполнение полей из сохранённого профиля и отображение email. */
@@ -164,12 +193,13 @@ class ProfileFragment : Fragment() {
         patronymic = binding.inputPatronymic.text?.toString().orEmpty()
     )
 
-    private fun goToApp() {
-        findNavController().navigate(R.id.action_profile_to_main)
-    }
-
     override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
+    }
+
+    companion object {
+        /** Аргумент: true — режим редактирования из вкладки «Аккаунт». */
+        const val ARG_EDIT_MODE = "edit_mode"
     }
 }

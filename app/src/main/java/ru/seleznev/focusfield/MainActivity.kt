@@ -22,6 +22,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import ru.seleznev.focusfield.data.model.AuthState
 import ru.seleznev.focusfield.databinding.ActivityMainBinding
+import ru.seleznev.focusfield.ui.profile.ProfileFragment
 
 /**
  * Единая активность: навигация по фрагментам (нижнее меню),
@@ -124,10 +125,17 @@ class MainActivity : AppCompatActivity() {
         val navHost =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment
         val navController = navHost.navController
-        // Экран профиля после регистрации — тупик «назад»: идём вперёд в приложение.
+        // Экран профиля после регистрации — тупик «назад»: идём вперёд в
+        // приложение. В режиме редактирования (из «Аккаунта») — обычный
+        // возврат на предыдущий экран.
         if (navController.currentDestination?.id == R.id.profileFragment) {
-            navController.navigate(R.id.action_profile_to_main)
-            return true
+            val inEditMode = navHost.childFragmentManager.fragments
+                .lastOrNull { it is ProfileFragment }
+                ?.arguments?.getBoolean(ProfileFragment.ARG_EDIT_MODE, false) == true
+            if (!inEditMode) {
+                navController.navigate(R.id.action_profile_to_main)
+                return true
+            }
         }
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }

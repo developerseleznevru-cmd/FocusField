@@ -1,6 +1,9 @@
 package ru.seleznev.focusfield.util
 
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.TimeZone
 
 /**
@@ -37,6 +40,10 @@ object DayMath {
         cal.add(Calendar.MINUTE, minutes)
         return cal.timeInMillis
     }
+
+    /** Дата момента [millis] в формате «dd.MM» (локальная зона). */
+    fun formatDay(millis: Long): String =
+        SimpleDateFormat("dd.MM", Locale.getDefault()).format(Date(millis))
 
     const val MILLIS_PER_DAY: Long = 24L * 60 * 60 * 1000
 }

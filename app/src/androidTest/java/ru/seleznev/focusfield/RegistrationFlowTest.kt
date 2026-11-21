@@ -22,6 +22,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.hamcrest.Matchers.not
+import ru.seleznev.focusfield.data.crypto.PasswordHasher
 import ru.seleznev.focusfield.data.prefs.SecurePrefs
 import java.io.File
 import java.io.FileOutputStream
@@ -206,14 +208,129 @@ class RegistrationFlowTest {
 
         // «Аккаунт» — отдельная вкладка нижнего меню с кнопкой выхода.
         onView(withId(R.id.accountFragment)).perform(click())
-        onView(withId(R.id.btn_logout)).check(matches(isDisplayed()))
         onView(withId(R.id.account_email)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_logout)).perform(scrollTo()).check(matches(isDisplayed()))
         captureView(R.id.account_root, "account_screen.png")
 
         // В настройках раздел «Аккаунт» больше нет.
         onView(withId(R.id.settingsFragment)).perform(click())
         onView(withText("Внешний вид")).check(matches(isDisplayed()))
         onView(withText("Выйти из аккаунта")).check(doesNotExist())
+    }
+
+    @Test
+    fun accountEditsProfileAndReturns() {
+        val email = registerNewUser()
+        // В приложение (кнопка «Пропустить»).
+        onView(withId(R.id.btn_skip)).perform(scrollTo(), click())
+
+        // «Аккаунт» → «Редактировать профиль».
+        onView(withId(R.id.accountFragment)).perform(click())
+        onView(withId(R.id.btn_edit_profile)).perform(scrollTo(), click())
+
+        // Режим редактирования: «Пропустить» скрыт, кнопка «Сохранить».
+        onView(withId(R.id.profile_title)).check(matches(isDisplayed()))
+        onView(withId(R.id.btn_skip)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.btn_save)).check(matches(withText("Сохранить")))
+
+        // Правим имя и сохраняем.
+        onView(withId(R.id.input_first_name))
+            .perform(replaceText("Правлен"), closeSoftKeyboard())
+        onView(withId(R.id.btn_save)).perform(scrollTo(), click())
+
+        // Возврат на экран «Аккаунт» (не в приложение).
+        onView(withId(R.id.profile_title)).check(doesNotExist())
+        onView(withId(R.id.account_name)).check(matches(withText("Тестов Правлен Тестович")))
+        onView(withId(R.id.btn_logout)).perform(scrollTo()).check(matches(isDisplayed()))
+
+        // Изменение дошло до хранилища.
+        val stored = SecurePrefs.auth(context).getString("profile:$email", null)
+        assertTrue("Имя должно сохраниться: $stored",
+            stored == "Тестов Правлен Тестович")
+
+        captureView(R.id.account_root, "account_edited.png")
+    }
+
+    @Test
+    fun accountShowsStatusStatsAndChangesPassword() {
+        val email = registerNewUser()
+        onView(withId(R.id.btn_skip)).perform(scrollTo(), click())
+        onView(withId(R.id.accountFragment)).perform(click())
+
+        // Статус режима и разрешения (верх экрана).
+        onView(withId(R.id.account_status)).check(matches(isDisplayed()))
+        onView(withId(R.id.account_perm_camera_status))
+            .perform(scrollTo()).check(matches(withText("✓ Разрешено")))
+        onView(withId(R.id.account_perm_accessibility_status))
+            .perform(scrollTo()).check(matches(isDisplayed()))
+
+        // Компактная статистика: у нового аккаунта нули и «—».
+        // Данные приходят асинхронно из Room — даём корутине выполниться.
+        Thread.sleep(800)
+        onView(withId(R.id.account_stat_sessions)).perform(scrollTo())
+            .check(matches(withText("0")))
+        onView(withId(R.id.account_stat_focus)).perform(scrollTo())
+            .check(matches(withText("0 мин")))
+        onView(withId(R.id.account_stat_streak)).perform(scrollTo())
+            .check(matches(withText("0 дн")))
+        onView(withId(R.id.account_stat_best_day)).perform(scrollTo())
+            .check(matches(withText("—")))
+        captureView(R.id.account_root, "account_full.png")
+
+        // Смена пароля: диалог с тремя полями, успех меняет хеш в хранилище.
+        onView(withId(R.id.btn_change_password)).perform(scrollTo(), click())
+        onView(withId(R.id.input_current_password))
+            .perform(replaceText(PASSWORD), closeSoftKeyboard())
+        onView(withId(R.id.input_new_password))
+            .perform(replaceText(NEW_PASSWORD), closeSoftKeyboard())
+        onView(withId(R.id.input_repeat_password))
+            .perform(replaceText(NEW_PASSWORD), closeSoftKeyboard())
+        onView(withId(android.R.id.button1)).perform(click())
+
+        val stored = SecurePrefs.auth(context).getString("user:$email", null)
+        assertTrue(
+            "Новый пароль должен сохраниться: $stored",
+            stored != null && PasswordHasher.verify(NEW_PASSWORD, stored)
+        )
+        assertTrue(
+            "Старый пароль должен перестать подходить",
+            stored != null && !PasswordHasher.verify(PASSWORD, stored)
+        )
+    }
+
+    @Test
+    fun accountDeleteNeedsDoubleConfirmAndSignsOut() {
+        val email = registerNewUser()
+        onView(withId(R.id.btn_skip)).perform(scrollTo(), click())
+        onView(withId(R.id.accountFragment)).perform(click())
+
+        // Двойное подтверждение: первый диалог → второй → аккаунт удалён.
+        onView(withId(R.id.btn_delete_account)).perform(scrollTo(), click())
+        onView(withText("Удалить аккаунт?")).check(matches(isDisplayed()))
+        onView(withId(android.R.id.button1)).perform(click())
+        onView(withText("Вы уверены?")).check(matches(isDisplayed()))
+        onView(withId(android.R.id.button1)).perform(click())
+
+        // Удаление асинхронно — ждём перехода на экран входа.
+        val deadline = System.currentTimeMillis() + 5_000
+        while (System.currentTimeMillis() < deadline) {
+            val onAuth = try {
+                onView(withId(R.id.input_email)).check(matches(isDisplayed()))
+                true
+            } catch (_: Throwable) {
+                false
+            }
+            if (onAuth) break
+            Thread.sleep(250)
+        }
+        onView(withId(R.id.input_email)).check(matches(isDisplayed()))
+
+        // Локальные данные аккаунта удалены.
+        val prefs = SecurePrefs.auth(context)
+        assertTrue("Учётная запись должна быть удалена",
+            prefs.getString("user:$email", null) == null)
+        assertTrue("Профиль должен быть удалён",
+            prefs.getString("profile:$email", null) == null)
     }
 
     /** Открывает экран входа, переключается в режим регистрации и регистрирует пользователя. */
@@ -294,5 +411,6 @@ class RegistrationFlowTest {
 
     private companion object {
         const val PASSWORD = "Test123!"
+        const val NEW_PASSWORD = "NewPass123!"
     }
 }
